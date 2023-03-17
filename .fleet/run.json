@@ -1,0 +1,10 @@
+{
+    "configurations": [
+        {
+            "file": "manage.py",
+            "name": "Python configuration",
+            "type": "python",
+            "arguments": ["runserver"],
+        },
+    ]
+}
