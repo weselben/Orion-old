@@ -1,0 +1,32 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+env/
+build/
+dist/
+eggs/
+*.egg-info/
+*.egg
+
+# Django generated files
+*.log
+*.pot
+*.pyc
+*.sqlite3
+db.sqlite3
+media
+
+# Ignore local development settings
+*.env
+*.pyc
+*.envrc
+
+# Ignore VSCode files
+.vscode/
