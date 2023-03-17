@@ -1,6 +1,6 @@
-# My Django Project
+# Orion 
 
-This is a brief description of my Django project.
+This is a brief description of my Orion a django based Webproject
 
 ## Getting Started
 
