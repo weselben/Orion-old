@@ -30,3 +30,6 @@ media
 
 # Ignore VSCode files
 .vscode/
+
+#Ignore migrations
+migrations/
