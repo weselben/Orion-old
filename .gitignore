@@ -31,5 +31,8 @@ media
 # Ignore VSCode files
 .vscode/
 
-#Ignore migrations
+# Ignore migrations
 migrations/
+
+# Ignore database files
+*.sqlite3
