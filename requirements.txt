@@ -1,0 +1,5 @@
+Django==4.1.7
+google_api_python_client==2.81.0
+python-dotenv==1.0.0
+requests==2.24.0
+youtube_dl==2021.12.17
