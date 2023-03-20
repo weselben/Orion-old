@@ -7,7 +7,9 @@
             <h1>video.html</h1>
         </header>
         <main>
-            <p>{{ status }}</p>
+            <video controls>
+                <source src="{% url 'watch' movid=movid %}" type="video/mp4">
+            </video>
         </main>
         <footer>
 
