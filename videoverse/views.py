@@ -2,7 +2,6 @@ from django.shortcuts import render
 from django.http import StreamingHttpResponse
 import requests, os
 import subprocess
-import youtube_dl
 
 
 # Create your views here.
@@ -10,28 +9,27 @@ def main(request):
     return render(request, 'main.html')
 
 
-def youtube_search(query):
-    # Search for videos on YouTube
-    youtube_api_key = os.getenv('YOUTUBE_API_KEY')
-    youtube_url = f'https://www.googleapis.com/youtube/v3/search?key={youtube_api_key}&part=snippet&type=video&q={str(query)}'
-    youtube_response = requests.get(youtube_url)
-    youtube_results = youtube_response.json()['items']
-
-    return youtube_results
-
-
-def movieaseries_search(query):
-    # Search for movies and TV shows on OMDb
-    omdb_api_key = os.getenv('OMDB_API_KEY')
-    omdb_url = f'http://www.omdbapi.com/?apikey={omdb_api_key}&s={query}&type=movie,series'
-    omdb_response = requests.get(omdb_url)
-    omdb_results = omdb_response.json()['Search']
-
-    return omdb_results
-
-
 def video_search(request):
     query = request.GET.get('q')
+
+    def youtube_search(query):
+        # Search for videos on YouTube
+        youtube_api_key = os.getenv('YOUTUBE_API_KEY')
+        youtube_url = f'https://www.googleapis.com/youtube/v3/search?key={youtube_api_key}&part=snippet&type=video&q={str(query)}'
+        youtube_response = requests.get(youtube_url)
+        youtube_results = youtube_response.json()['items']
+
+        return youtube_results
+
+    def movieaseries_search(query):
+        # Search for movies and TV shows on OMDb
+        omdb_api_key = os.getenv('OMDB_API_KEY')
+        omdb_url = f'http://www.omdbapi.com/?apikey={omdb_api_key}&s={query}&type=movie,series'
+        omdb_response = requests.get(omdb_url)
+        omdb_results = omdb_response.json()['Search']
+
+        return omdb_results
+
     youtube_results = youtube_search(query)
     movie_and_series_results = movieaseries_search(query)
     return render(request, 'search.html',
@@ -49,23 +47,31 @@ def watch(request):
         movid = False
 
     def yt_watch(request, movid):
-        # Construct the URL for the YouTube video
-        youtube_url = f'https://www.youtube.com/watch?v={movid}'
+        # Set the video URL
+        video_url = 'https://www.youtube.com/watch?v=' + movid
 
-        # Start the `youtube-dl` process to download and stream the video
-        process = subprocess.Popen(['youtube-dl', '-o', '-', youtube_url], stdout=subprocess.PIPE)
+        # Call youtube-dl to download the video as a stream
+        cmd = ['youtube-dl', '-o', '-', video_url]
+        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
 
-        # Use a generator function to stream the video to the browser in chunks
-        def generate():
+        def stream_response_generator(filelike_object, chunk_size=4096):
+            """Generate a Django-style streaming response from a file-like object."""
             while True:
-                chunk = process.stdout.read(4096)
-                if not chunk:
+                data = filelike_object.read(chunk_size)
+                if not data:
                     break
-                yield chunk
+                yield data
 
-        # Construct the HTTP response with the generator function as content
-        response = StreamingHttpResponse(generate(), content_type='video/mp4')
-        response['Content-Disposition'] = f'inline; filename="{movid}.mp4"'
+        # Set the response content type to video/mp4
+        response = StreamingHttpResponse(
+            stream_response_generator(proc.stdout),
+            content_type='video/mp4'
+        )
+
+        # Set the Content-Length header to the size of the video
+        response['Content-Length'] = proc.stdout.tell()
+
+        #return render(request, 'watch.html', {'response': response, 'movid': movid})
         return response
 
     def disneyplus(request, movid):
@@ -79,12 +85,12 @@ def watch(request):
 
     # Service Matcher
     if sid == 0:
-        yt_watch(request, movid)
+        return yt_watch(request, movid)
     elif sid == 1:
-        disneyplus(request, movid)
+        return disneyplus(request, movid)
     elif sid == 2:
-        amazonprime(request, movid)
+        return amazonprime(request, movid)
     elif sid == 3:
-        netflix(request, movid)
+        return netflix(request, movid)
     else:
         return render(request, 'watch.html', {'status', "No Service ID"})
